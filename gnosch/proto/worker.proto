@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+enum ServerStatus {
+	UNKNOWN_SERVER_STATUS = 0;
+	OK = 1;
+}
+message PingRequest {
+}
+message PingResponse {
+	optional ServerStatus status = 1;
+}
+
+enum JobStatus {
+	UNKNOWN_JOB_STATUS = 0;
+	COORDINATOR_ACCEPTED = 1;
+	COORDINATOR_SCHEDULED = 2;
+	COORDINATOR_ERROR = 3;
+	WORKER_ACCEPTED = 10;
+	WORKER_RUNNING = 11;
+	WORKER_ERROR = 12;
+	FINISHED = 20;
+}
+
+message ClientCommandResponse {
+	// job
+	optional string job_id = 1;
+	optional JobStatus job_status = 2;
+	optional string worker_id = 3;
+
+	// dataset
+	optional string dataset_id = 10;
+}
+
+message ClientCommandRequest {
+	// job
+	optional string new_job_definition = 1;
+	optional string query_job_status_id = 2;
+
+	// dataset
+	optional string drop_dataset_id = 10;
+}
+
+service Worker {
+	rpc Ping(PingRequest) returns (PingResponse) {}
+	// rpc IngestDataset(stream DatasetBlock) returns (IngestDatasetResponse) {}
+	// rpc CommandEventChat(stream Command) returns (stream Event) {} // -- or have it bidirectional?
+
+	// *Controller* section
+	rpc ClientCommand(ClientCommandRequest) returns (ClientCommandResponse) {}
+}
