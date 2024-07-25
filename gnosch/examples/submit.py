@@ -7,7 +7,6 @@ Submits a simple job corresponding to gnosch.examples.jobs
 import numpy as np
 import time
 import os
-from multiprocessing import set_start_method
 import grpc
 import gnosch.api.worker_pb2_grpc as services
 import gnosch.api.worker_pb2 as protos
@@ -61,5 +60,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-	set_start_method("forkserver")
 	main()

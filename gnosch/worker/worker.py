@@ -4,6 +4,7 @@ Entrypoint for the worker process -- starts api_server and job_server.
 
 import logging
 from multiprocessing import Process
+from multiprocessing import set_start_method
 import atexit
 import gnosch.worker.local_comm as local_comm
 import gnosch.worker.datasets as datasets
@@ -19,6 +20,7 @@ def start() -> None:
 	new_process()
 	logger.info("starting server")
 
+	set_start_method("forkserver")
 	local_server = local_comm.LocalServer()
 	dataset_manager = datasets.DatasetManager()
 	job_manager = jobs.JobManager()
