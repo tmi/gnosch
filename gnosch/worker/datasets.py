@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from multiprocessing import shared_memory
 from typing import Optional
 from enum import Enum
+import logging
 
 # memory management
 # NOTE we are currently based on shared_memory, but we may want to explore other venues:
@@ -15,6 +16,8 @@ from enum import Enum
 #   https://stackoverflow.com/questions/4991533/sharing-memory-between-processes-through-the-use-of-mmap
 # - https://semanchuk.com/philip/posix_ipc/
 #   https://stackoverflow.com/questions/7419159/giving-access-to-shared-memory-after-child-processes-have-already-started
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Dataset:
@@ -77,5 +80,5 @@ class DatasetManager():
 		for k in self.datasets.keys():
 			try:
 				self.drop(k, pop=False)
-			except Exception as e:
-				print(f"gotten exception when unlinking: {k}, {e}")
+			except Exception:
+				logger.exception(f"gotten exception when unlinking: {k}")

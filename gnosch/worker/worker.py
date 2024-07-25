@@ -2,7 +2,7 @@
 Entrypoint for the worker process -- starts api_server and job_server.
 """
 
-import os
+import logging
 from multiprocessing import Process
 import atexit
 import gnosch.worker.local_comm as local_comm
@@ -10,9 +10,13 @@ import gnosch.worker.datasets as datasets
 import gnosch.worker.jobs as jobs
 import gnosch.worker.api_server as api_server
 import gnosch.worker.job_server as job_server
+from gnosch.worker.bootstrap import new_process
+
+logger = logging.getLogger(__name__)
 
 def start() -> None:
-	print(f"starting server in {os.getpid()}")
+	new_process()
+	logger.info(f"starting server")
 
 	local_server = local_comm.LocalServer()
 	dataset_manager = datasets.DatasetManager()

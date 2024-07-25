@@ -19,7 +19,6 @@ Don't use it.
 - phase1
   - add in tests
   - add in config
-  - add in logging
   - add in docker
   - add precommit
   - add cicd gh actions

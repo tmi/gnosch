@@ -7,6 +7,7 @@ to individual jobs, via worker.job_server.
 # TODO expose configs (grpc port, thread count)
 # TODO separate out the controller part
 
+import logging
 import gnosch.api.worker_pb2_grpc as services
 import uuid
 import gnosch.api.worker_pb2 as protos
@@ -15,6 +16,9 @@ from concurrent import futures
 from gnosch.worker.local_comm import send_command
 from gnosch.worker.job_interface import get_dataset
 from typing import Any
+from gnosch.worker.bootstrap import new_process
+
+logger = logging.getLogger(__name__)
 
 class WorkerImpl(services.Worker):
 	def Ping(self, request: protos.PingRequest, context: Any): # type: ignore
@@ -63,7 +67,7 @@ class WorkerImpl(services.Worker):
 		if not available:
 			yield protos.RetrieveDatasetBlock(data=b"", status=protos.DatasetStatus.DATASET_NOT_FOUND)
 		else:
-			print("about to stream dataset")
+			logger.debug("about to stream dataset")
 			i, k, L = 0, request.block_size_hint, len(data)
 			while i < L:
 				yield protos.RetrieveDatasetBlock(data=bytes(data[i:i+k]), status=protos.DatasetStatus.DATASET_AVAILABLE)
@@ -71,8 +75,9 @@ class WorkerImpl(services.Worker):
 			h()
 
 def start() -> None:
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-    services.add_WorkerServicer_to_server(WorkerImpl(), server)
-    server.add_insecure_port("[::]:50051")
-    server.start()
-    server.wait_for_termination()
+	new_process()
+	server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+	services.add_WorkerServicer_to_server(WorkerImpl(), server)
+	server.add_insecure_port("[::]:50051")
+	server.start()
+	server.wait_for_termination()

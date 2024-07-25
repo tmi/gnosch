@@ -24,14 +24,16 @@ import time
 from gnosch.worker.datasets import DatasetManager, DatasetStatus
 from gnosch.worker.jobs import JobManager
 from gnosch.worker.local_comm import LocalServer
+import logging
+
+logger = logging.getLogger(__name__)
 
 def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manager: JobManager):
 	while True:
 		payload, client = local_server.receive()
-		print(payload)
+		logger.debug(payload)
 		command, data = payload.decode('ascii').split(":", 1)
 		if command == 'ping':
-			print("sending Y back")
 			local_server.sendto(b'Y', client)
 		elif command == 'new':
 			if dataset_manager.new(data):
@@ -51,10 +53,10 @@ def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manage
 				local_server.sendto(b'N', client)
 		elif command == 'drop_ds':
 			if dataset_manager.drop(data):
-				print(f"dataset was dropped: {data}")
+				logger.debug(f"dataset was dropped: {data}")
 				local_server.sendto(b'Y', client)
 			else:
-				print(f"dataset was not present/finalized: {data}")
+				logger.debug(f"dataset was not present/finalized: {data}")
 				local_server.sendto(b'N', client)
 		elif command == 'submit':
 			job_name, job_code = data.split('_', 1)
