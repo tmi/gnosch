@@ -22,7 +22,12 @@ Don't use it.
   - add in config
   - add in docker
 - basic controller functionality
-  - controller tracking job/dataset worker assignment
+  - controller tracking dataset worker assignment
+	- [✓] dataset manager in controller
+	- [ ] controller update dataset manager in purge/retrieve calls (intercept result)
+	- [ ] 'dataset ready' status update in controller api + impl
+	- [ ] dataset status sending in worker
+  - controller tracking job worker assignment
   - controller worker lookup
 - basic scheduler functionality
   - introduce dag abstraction and full fledged controller process

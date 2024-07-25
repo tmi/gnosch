@@ -57,16 +57,16 @@ class WorkerImpl(services.GnoschBase):
 		if request.retrieve:
 			data, h, available = get_dataset(request.dataset_id, 1_000)
 			if not available:
-				yield protos.DatasetCommandResponse(data=b"", status=protos.DatasetCommandResult.DATASET_NOT_FOUND)
+				yield protos.DatasetCommandResponse(data=b"", status=protos.DatasetCommandResult.DATASET_NOT_FOUND, worker_id=self.worker_id)
 			else:
 				logger.debug("about to stream dataset")
 				i, k, L = 0, request.block_size_hint, len(data)
 				while i < L:
-					yield protos.DatasetCommandResponse(data=bytes(data[i : i + k]), status=protos.DatasetCommandResult.DATASET_AVAILABLE)
+					yield protos.DatasetCommandResponse(data=bytes(data[i : i + k]), status=protos.DatasetCommandResult.DATASET_AVAILABLE, worker_id=self.worker_id)
 					i += k
 				h()
 		if request.drop:
-			response = protos.DatasetCommandResponse(data=bytes(), dataset_id=request.dataset_id)
+			response = protos.DatasetCommandResponse(data=bytes(), dataset_id=request.dataset_id, worker_id=self.worker_id)
 			status = send_command("drop_ds", request.dataset_id)
 			if status == "Y":
 				response.status=protos.DatasetCommandResult.DATASET_DROPPED

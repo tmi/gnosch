@@ -53,7 +53,8 @@ enum DatasetCommandResult {
 message DatasetCommandResponse {
 	optional DatasetCommandResult status = 1;
 	optional string dataset_id = 2;
-	optional bytes data = 3;
+	optional string worker_id = 3;
+	optional bytes data = 4;
 }
 
 service GnoschBase {
