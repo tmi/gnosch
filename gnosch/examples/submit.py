@@ -39,14 +39,25 @@ def main() -> None:
 	job2stReq = protos.ClientCommandRequest(query_job_status_id=job2res.job_id)
 	while True:
 		job2stRes = client.ClientCommand(job2stReq)
+		print(f"{job2stRes=}")
 		if job2stRes.job_status == protos.JobStatus.WORKER_RUNNING:
-			print(f"{job2stRes=}")
 			time.sleep(0.2)
 		elif job2stRes.job_status == protos.JobStatus.FINISHED:
 			print("done")
 			break
 		else:
 			raise ValueError(job2stRes)
+
+	finReq = protos.RetrieveDatasetRequest(dataset_id="d1", block_size_hint=1024)
+	finRes = client.RetrieveDataset(finReq)
+	finResBuf = b""
+	for finResIt in finRes:
+		if finResIt.status != protos.DatasetStatus.DATASET_AVAILABLE:
+			print("error obtaining final result")
+		else:
+			finResBuf += finResIt.data
+	finResNp = np.frombuffer(finResBuf, dtype=int, count=3)
+	print(f"final result: {finResNp}")
 
 if __name__ == "__main__":
 	set_start_method("forkserver")

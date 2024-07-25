@@ -58,10 +58,13 @@ class DatasetManager():
 			self.datasets[dataset_key].finalized = True
 			return True
 
-	def drop(self, dataset_key: str) -> bool:
+	def drop(self, dataset_key: str, pop: bool = True) -> bool:
 		status = self.status(dataset_key)
 		if status == DatasetStatus.finalized:
-			shm = self.datasets.pop(dataset_key).shm 
+			if pop:
+				shm = self.datasets.pop(dataset_key).shm 
+			else:
+				shm = self.datasets[dataset_key].shm
 			if shm is None:
 				raise ValueError(f"finalized but None dataset: {dataset_key}")
 			shm.close()
@@ -73,6 +76,6 @@ class DatasetManager():
 	def quit(self):
 		for k in self.datasets.keys():
 			try:
-				self.drop(k)
+				self.drop(k, pop=False)
 			except Exception as e:
 				print(f"gotten exception when unlinking: {k}, {e}")

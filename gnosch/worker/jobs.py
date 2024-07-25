@@ -37,10 +37,12 @@ class JobManager:
 			p = Process(target = spawned_job_entrypoint, args = (name, code,))
 			p.start()
 			self.jobs[name] = p
+			print(f"started job {p.pid} with {p.exitcode=}")
 			return True
 
 	def status(self, name: str) -> JobStatus:
 		if name not in self.jobs:
 			return JobStatus(False, None)
 		else:
+			print(f"inquries about job {self.jobs[name].pid} with {self.jobs[name].exitcode}")
 			return JobStatus(True, self.jobs[name].exitcode)

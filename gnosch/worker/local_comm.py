@@ -31,7 +31,7 @@ class LocalServer():
 		return self.sock.recvfrom(1024)
 
 	def sendto(self, payload: bytes, address: str) -> None:
-		self.sock.sendto(b'Y', address)
+		self.sock.sendto(payload, address)
 
 	def quit(self) -> None:
 		self.sock.close()
@@ -46,11 +46,12 @@ def send_command(command: str, data: str) -> str:
 	sock.close()
 	return response
 
-def await_command(command: str, data: str) -> None:
-	# TODO add timeout
-	while True:
+def await_command(command: str, data: str, timeout_ms: int) -> bool:
+	end = time.time() + timeout_ms*1000
+	while time.time() < end:
 		response = send_command(command, data)
 		if response != 'N':
-			return
+			return True
 		else:
 			time.sleep(1)
+	return False

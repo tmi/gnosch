@@ -10,7 +10,9 @@ import gnosch.worker.job_interface as worker
 
 def data_consumer() -> None:
 	print(f"consuming dataset from {os.getpid()}")
-	raw, h = worker.get_dataset('d1')
+	raw, h, a = worker.get_dataset('d1', 5_000)
+	if not a:
+		raise ValueError("get_dataset failed!")
 	print(f"data is {np.frombuffer(raw, dtype=int, count=3)}")
 	h()
 	print("consumer done")

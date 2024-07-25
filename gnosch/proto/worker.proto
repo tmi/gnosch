@@ -40,11 +40,30 @@ message ClientCommandRequest {
 	optional string drop_dataset_id = 10;
 }
 
+message RetrieveDatasetRequest {
+	optional string dataset_id = 1;
+	optional int32 block_size_hint = 2;
+}
+
+enum DatasetStatus {
+	UNKNOWN_DATASET_STATUS = 0;
+	DATASET_NOT_FOUND = 1;
+	DATASET_NOT_READY = 2;
+	DATASET_AVAILABLE = 3;
+}
+
+message RetrieveDatasetBlock {
+	optional bytes data = 1;
+	optional DatasetStatus status = 2;
+}
+
 service Worker {
 	rpc Ping(PingRequest) returns (PingResponse) {}
+	rpc RetrieveDataset(RetrieveDatasetRequest) returns (stream RetrieveDatasetBlock) {}
 	// rpc IngestDataset(stream DatasetBlock) returns (IngestDatasetResponse) {}
 	// rpc CommandEventChat(stream Command) returns (stream Event) {} // -- or have it bidirectional?
 
 	// *Controller* section
 	rpc ClientCommand(ClientCommandRequest) returns (ClientCommandResponse) {}
+	// copy Ping, Retrieve & Ingest Dataset
 }

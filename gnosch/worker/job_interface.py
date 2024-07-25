@@ -4,7 +4,6 @@ the controller then publishes cluster-wide) or obtaining a published
 dataset for usage in the job.
 """
 
-# TODO add timeout
 # TODO add retry/recovery
 
 import time
@@ -31,7 +30,11 @@ def notify_upload_done(name: str) -> None:
 	if response == 'N':
 		raise ValueError(f"problem: {response=}")
 
-def get_dataset(name: str) -> tuple[bytes, Callable]:
-	await_command("ready_ds", name)
+def get_dataset(name: str, timeout_ms: int) -> tuple[bytes, Callable, bool]:
+	# TODO return status instead of bool... and wrap in a dataclass
+	print("about to await")
+	if not await_command("ready_ds", name, timeout_ms):
+		return b"", lambda : None, False
+	print("about to bind")
 	m = shared_memory.SharedMemory(name=name, create=False)
-	return m.buf, lambda : m.close() # or register the m.close for atexit instead?
+	return m.buf, lambda : m.close(), True # or register the m.close for atexit instead?

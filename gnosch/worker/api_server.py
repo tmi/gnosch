@@ -13,6 +13,7 @@ import gnosch.api.worker_pb2 as protos
 import grpc
 from concurrent import futures
 from gnosch.worker.local_comm import send_command
+from gnosch.worker.job_interface import get_dataset
 from typing import Any
 
 class WorkerImpl(services.Worker):
@@ -56,6 +57,18 @@ class WorkerImpl(services.Worker):
 			return self.drop_dataset(request.drop_dataset_id)
 		else:
 			return protos.ClientCommandResponse()
+
+	def RetrieveDataset(self, request: protos.RetrieveDatasetRequest, context: Any) -> protos.RetrieveDatasetBlock: # type: ignore
+		data, h, available = get_dataset(request.dataset_id, 1_000)
+		if not available:
+			yield protos.RetrieveDatasetBlock(data=b"", status=protos.DatasetStatus.DATASET_NOT_FOUND)
+		else:
+			print("about to stream dataset")
+			i, k, L = 0, request.block_size_hint, len(data)
+			while i < L:
+				yield protos.RetrieveDatasetBlock(data=bytes(data[i:i+k]), status=protos.DatasetStatus.DATASET_AVAILABLE)
+				i+=k
+			h()
 
 def start() -> None:
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))

@@ -44,8 +44,8 @@ def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manage
 			else:
 				local_server.sendto(b'N', client)
 		elif command == 'ready_ds':
-			status = dataset_manager.status(data)
-			if status == DatasetStatus.finalized:
+			ds_status = dataset_manager.status(data)
+			if ds_status == DatasetStatus.finalized:
 				local_server.sendto(b'Y', client)
 			else:
 				local_server.sendto(b'N', client)
@@ -63,12 +63,12 @@ def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manage
 			else:
 				local_server.sendto(b'N', client)
 		elif command == 'ready_job':
-			status = job_manager.status(data)
-			if not status.exists:
+			job_status = job_manager.status(data)
+			if not job_status.exists:
 				local_server.sendto(b'N', client)
-			elif status.code == 0:
+			elif job_status.code == 0:
 				local_server.sendto(b'Y', client)
-			elif status.code is None:
+			elif job_status.code is None:
 				local_server.sendto(b'N', client)
 			else:
 				local_server.sendto(b'E', client)

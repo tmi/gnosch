@@ -17,7 +17,6 @@ Don't use it.
 
 ## TODOs
 - phase1
-  - add getDataset grpc endpoint for retrieving cluster results
   - add in tests
   - add in config
   - add in logging
