@@ -1,6 +1,6 @@
 protoc:
 	python -m grpc_tools.protoc -Ignosch/api=./gnosch/proto --python_out=. --pyi_out=. --grpc_python_out=. gnosch/proto/worker.proto
-	touch gnosch/proto/__init__.py
+	touch gnosch/api/__init__.py
 
 server:
 	python -c 'import gnosch.worker.worker as w; w.start()'
