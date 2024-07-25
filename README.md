@@ -20,7 +20,6 @@ Don't use it.
   - add in tests
   - add in config
   - add in docker
-  - add precommit
   - add cicd gh actions
 - phase2
   - split controller and worker into two standalone processes
