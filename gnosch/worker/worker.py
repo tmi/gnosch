@@ -14,9 +14,10 @@ from gnosch.worker.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 
+
 def start() -> None:
 	new_process()
-	logger.info(f"starting server")
+	logger.info("starting server")
 
 	local_server = local_comm.LocalServer()
 	dataset_manager = datasets.DatasetManager()

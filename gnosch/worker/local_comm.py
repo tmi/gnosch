@@ -13,14 +13,19 @@ import socket
 import os
 
 client_port_envvar = "_PORT"
+
+
 def publish_client_port(port: int) -> None:
 	"""Used by worker on start, to ensure future child processes can comm"""
 	os.environ[client_port_envvar] = str(port)
 
+
 client_port = int(os.getenv(client_port_envvar, "0"))
 
-class LocalServer():
+
+class LocalServer:
 	"""Abstraction over socket, used for local comms. No business logic, just io"""
+
 	def __init__(self):
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		server = ("0.0.0.0", 0)
@@ -36,6 +41,7 @@ class LocalServer():
 	def quit(self) -> None:
 		self.sock.close()
 
+
 def send_command(command: str, data: str) -> str:
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	if client_port == 0:
@@ -46,11 +52,12 @@ def send_command(command: str, data: str) -> str:
 	sock.close()
 	return response
 
+
 def await_command(command: str, data: str, timeout_ms: int) -> bool:
-	end = time.time() + timeout_ms*1000
+	end = time.time() + timeout_ms * 1000
 	while time.time() < end:
 		response = send_command(command, data)
-		if response != 'N':
+		if response != "N":
 			return True
 		else:
 			time.sleep(1)

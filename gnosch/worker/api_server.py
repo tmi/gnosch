@@ -20,15 +20,16 @@ from gnosch.worker.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 
+
 class WorkerImpl(services.Worker):
-	def Ping(self, request: protos.PingRequest, context: Any): # type: ignore
+	def Ping(self, request: protos.PingRequest, context: Any):  # type: ignore
 		return protos.PingResponse(status=protos.ServerStatus.OK)
-	
+
 	def submit_job(self, definition: str) -> protos.ClientCommandResponse:
 		job_id = str(uuid.uuid4())
 		status = send_command("submit", f"{job_id}_{definition}")
 		resp = protos.ClientCommandResponse(job_id=job_id)
-		if status == 'Y':
+		if status == "Y":
 			resp.job_status = protos.JobStatus.COORDINATOR_ACCEPTED
 		else:
 			resp.job_status = protos.JobStatus.COORDINATOR_ERROR
@@ -37,9 +38,9 @@ class WorkerImpl(services.Worker):
 	def job_status(self, job_id: str) -> protos.ClientCommandResponse:
 		status = send_command("ready_job", job_id)
 		resp = protos.ClientCommandResponse(job_id=job_id, worker_id="single")
-		if status == 'Y':
+		if status == "Y":
 			resp.job_status = protos.JobStatus.FINISHED
-		elif status == 'N':
+		elif status == "N":
 			resp.job_status = protos.JobStatus.WORKER_RUNNING
 		else:
 			resp.job_status = protos.JobStatus.WORKER_ERROR
@@ -48,11 +49,11 @@ class WorkerImpl(services.Worker):
 	def drop_dataset(self, dataset_id: str) -> protos.ClientCommandResponse:
 		status = send_command("drop_ds", dataset_id)
 		resp = protos.ClientCommandResponse()
-		if status == 'Y':
+		if status == "Y":
 			resp.dataset_id = dataset_id
 		return resp
 
-	def ClientCommand(self, request: protos.ClientCommandRequest, context: Any) -> protos.ClientCommandResponse: # type: ignore
+	def ClientCommand(self, request: protos.ClientCommandRequest, context: Any) -> protos.ClientCommandResponse:  # type: ignore
 		if request.new_job_definition:
 			return self.submit_job(request.new_job_definition)
 		elif request.query_job_status_id:
@@ -62,7 +63,7 @@ class WorkerImpl(services.Worker):
 		else:
 			return protos.ClientCommandResponse()
 
-	def RetrieveDataset(self, request: protos.RetrieveDatasetRequest, context: Any) -> protos.RetrieveDatasetBlock: # type: ignore
+	def RetrieveDataset(self, request: protos.RetrieveDatasetRequest, context: Any) -> protos.RetrieveDatasetBlock:  # type: ignore
 		data, h, available = get_dataset(request.dataset_id, 1_000)
 		if not available:
 			yield protos.RetrieveDatasetBlock(data=b"", status=protos.DatasetStatus.DATASET_NOT_FOUND)
@@ -70,9 +71,10 @@ class WorkerImpl(services.Worker):
 			logger.debug("about to stream dataset")
 			i, k, L = 0, request.block_size_hint, len(data)
 			while i < L:
-				yield protos.RetrieveDatasetBlock(data=bytes(data[i:i+k]), status=protos.DatasetStatus.DATASET_AVAILABLE)
-				i+=k
+				yield protos.RetrieveDatasetBlock(data=bytes(data[i : i + k]), status=protos.DatasetStatus.DATASET_AVAILABLE)
+				i += k
 			h()
+
 
 def start() -> None:
 	new_process()

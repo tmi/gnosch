@@ -10,6 +10,7 @@ from gnosch.worker.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 
+
 def spawned_job_entrypoint(name: str, code: str) -> None:
 	new_process()
 	logger.debug(f"job starting: {name}")
@@ -19,10 +20,12 @@ def spawned_job_entrypoint(name: str, code: str) -> None:
 		logger.exception(f"job got exception! {name}")
 		raise
 
+
 @dataclass
 class JobStatus:
 	exists: bool
 	code: Optional[int]
+
 
 class JobManager:
 	jobs: dict[str, Process]
@@ -39,7 +42,13 @@ class JobManager:
 		if name in self.jobs:
 			return False
 		else:
-			p = Process(target = spawned_job_entrypoint, args = (name, code,))
+			p = Process(
+				target=spawned_job_entrypoint,
+				args=(
+					name,
+					code,
+				),
+			)
 			p.start()
 			self.jobs[name] = p
 			logger.debug(f"started job {p.pid} with {p.exitcode=}")

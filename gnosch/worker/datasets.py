@@ -19,18 +19,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class Dataset:
 	shm: Optional[shared_memory.SharedMemory]
 	finalized: bool
 
+
 class DatasetStatus(Enum):
 	missing = 0
 	not_finalized = 1
 	finalized = 2
-	
 
-class DatasetManager():
+
+class DatasetManager:
 	datasets: dict[str, Dataset]
 
 	def __init__(self):
@@ -65,7 +67,7 @@ class DatasetManager():
 		status = self.status(dataset_key)
 		if status == DatasetStatus.finalized:
 			if pop:
-				shm = self.datasets.pop(dataset_key).shm 
+				shm = self.datasets.pop(dataset_key).shm
 			else:
 				shm = self.datasets[dataset_key].shm
 			if shm is None:
