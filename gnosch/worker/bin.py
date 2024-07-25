@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def start() -> None:
 	new_process()
-	logger.info("starting server")
+	logger.info("starting worker")
 
 	set_start_method("forkserver")
 	local_server = local_comm.LocalServer()

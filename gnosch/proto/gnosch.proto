@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+enum ServerStatus {
+	UNKNOWN_SERVER_STATUS = 0;
+	OK = 1;
+}
+message PingRequest {
+}
+message PingResponse {
+	optional ServerStatus status = 1;
+}
+
+enum JobStatus {
+	UNKNOWN_JOB_STATUS = 0;
+	COORDINATOR_ACCEPTED = 1;
+	COORDINATOR_SCHEDULED = 2;
+	COORDINATOR_ERROR = 3;
+	WORKER_ACCEPTED = 10;
+	WORKER_RUNNING = 11;
+	WORKER_ERROR = 12;
+	FINISHED = 20;
+}
+
+message JobResponse {
+	optional string job_id = 1;
+	optional JobStatus job_status = 2;
+	optional string worker_id = 3;
+}
+
+message JobCreateRequest {
+	optional string definition = 1;
+}
+
+message JobStatusRequest {
+	optional string job_id = 1;
+}
+
+message DatasetCommandRequest {
+	optional string dataset_id = 1;
+	optional bool retrieve = 2;
+	optional bool drop = 3;
+	optional int32 block_size_hint = 4;
+}
+
+enum DatasetCommandResult {
+	UNKNOWN_DATASET_STATUS = 0;
+	DATASET_NOT_FOUND = 1;
+	DATASET_NOT_READY = 2;
+	DATASET_AVAILABLE = 3;
+	DATASET_DROPPED = 4;
+}
+
+message DatasetCommandResponse {
+	optional DatasetCommandResult status = 1;
+	optional string dataset_id = 2;
+	optional bytes data = 3;
+}
+
+service GnoschBase {
+	rpc Ping(PingRequest) returns (PingResponse) {}
+	rpc DatasetCommand(DatasetCommandRequest) returns (stream DatasetCommandResponse) {}
+	rpc JobCreate(JobCreateRequest) returns (JobResponse) {}
+	rpc JobStatus(JobStatusRequest) returns (JobResponse) {}
+	// rpc IngestDataset(stream DatasetBlock) returns (IngestDatasetResponse) {}
+}
+
+message RegisterWorkerRequest {
+	optional string url = 1;
+	// TODO resources
+}
+
+message RegisterWorkerResponse {
+	optional string worker_id = 1;
+}
+
+service GnoschController {
+	rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse) {}
+}
