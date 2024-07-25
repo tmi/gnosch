@@ -18,9 +18,9 @@ Don't use it.
 ## TODOs
 - phase1
   - add in tests
+  - add cicd gh actions
   - add in config
   - add in docker
-  - add cicd gh actions
 - phase2
   - split controller and worker into two standalone processes
   - introduce bidirectional grpc event/command stream

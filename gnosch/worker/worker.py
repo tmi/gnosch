@@ -11,7 +11,7 @@ import gnosch.worker.datasets as datasets
 import gnosch.worker.jobs as jobs
 import gnosch.worker.api_server as api_server
 import gnosch.worker.job_server as job_server
-from gnosch.worker.bootstrap import new_process
+from gnosch.common.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 

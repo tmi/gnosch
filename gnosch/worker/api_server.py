@@ -16,7 +16,7 @@ from concurrent import futures
 from gnosch.worker.local_comm import send_command
 from gnosch.worker.job_interface import get_dataset
 from typing import Any
-from gnosch.worker.bootstrap import new_process
+from gnosch.common.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 
