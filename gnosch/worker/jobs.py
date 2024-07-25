@@ -6,7 +6,7 @@ import logging
 from multiprocessing import Process
 from dataclasses import dataclass
 from typing import Optional
-from gnosch.worker.bootstrap import new_process
+from gnosch.common.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 

@@ -16,16 +16,18 @@ This is an experimental project.
 Don't use it.
 
 ## TODOs
-- phase1
+- cicd, best practices, etc
   - add in tests
+  - add cicd gh actions
   - add in config
   - add in docker
-  - add cicd gh actions
-- phase2
-  - split controller and worker into two standalone processes
-  - introduce bidirectional grpc event/command stream
-- phase3
+- basic controller functionality
+  - controller tracking job/dataset worker assignment
+  - controller worker lookup
+- basic scheduler functionality
   - introduce dag abstraction and full fledged controller process
   - etc
-- phaseR
+- reliability and recoverability
+  - ...
+- performance improvements
   - rewrite internals to rust

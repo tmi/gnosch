@@ -11,14 +11,14 @@ import gnosch.worker.datasets as datasets
 import gnosch.worker.jobs as jobs
 import gnosch.worker.api_server as api_server
 import gnosch.worker.job_server as job_server
-from gnosch.worker.bootstrap import new_process
+from gnosch.common.bootstrap import new_process
 
 logger = logging.getLogger(__name__)
 
 
 def start() -> None:
 	new_process()
-	logger.info("starting server")
+	logger.info("starting worker")
 
 	set_start_method("forkserver")
 	local_server = local_comm.LocalServer()

@@ -1,9 +1,12 @@
 protoc:
-	python -m grpc_tools.protoc -Ignosch/api=./gnosch/proto --python_out=. --pyi_out=. --grpc_python_out=. gnosch/proto/worker.proto
+	python -m grpc_tools.protoc -Ignosch/api=./gnosch/proto --python_out=. --pyi_out=. --grpc_python_out=. gnosch/proto/gnosch.proto
 	touch gnosch/api/__init__.py
 
-server:
-	python -c 'import gnosch.worker.worker as w; w.start()'
+worker-server:
+	python -c 'import gnosch.worker.bin as w; w.start()'
+
+controller-server:
+	python -c 'import gnosch.controller.bin as c; c.start()'
 
 example:
 	PYTHONPATH="." python ./gnosch/examples/submit.py

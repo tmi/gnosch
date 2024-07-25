@@ -8,36 +8,36 @@ import numpy as np
 import time
 import os
 import grpc
-import gnosch.api.worker_pb2_grpc as services
-import gnosch.api.worker_pb2 as protos
+import gnosch.api.gnosch_pb2_grpc as services
+import gnosch.api.gnosch_pb2 as protos
 
 
 def main() -> None:
 	print(f"main starting with pid {os.getpid()}")
 	channel = grpc.insecure_channel("localhost:50051")
-	client = services.WorkerStub(channel)
+	client = services.GnoschBaseStub(channel)
 	ping = client.Ping(protos.PingRequest())
 	if ping.status != protos.ServerStatus.OK:
 		raise ValueError(f"controller not responding OK to ping: {ping}")
 
 	print("about to purge previous run dataset (if exists)")
-	purgeReq = protos.ClientCommandRequest(drop_dataset_id="d1")
-	purgeRes = client.ClientCommand(purgeReq)
+	purgeReq = protos.DatasetCommandRequest(dataset_id="d1", drop=True)
+	purgeRes = client.DatasetCommand(purgeReq)
 	print(f"{purgeRes=}")
 
 	print("about to run producer")
-	job1req = protos.ClientCommandRequest(new_job_definition="import gnosch.examples.jobs; gnosch.examples.jobs.data_producer()")
-	job1res = client.ClientCommand(job1req)
+	job1req = protos.JobCreateRequest(definition="import gnosch.examples.jobs; gnosch.examples.jobs.data_producer()")
+	job1res = client.JobCreate(job1req)
 	print(f"{job1res=}")
 
 	print("about to run consumer")
-	job2req = protos.ClientCommandRequest(new_job_definition="import gnosch.examples.jobs; gnosch.examples.jobs.data_consumer()")
-	job2res = client.ClientCommand(job2req)
+	job2req = protos.JobCreateRequest(definition="import gnosch.examples.jobs; gnosch.examples.jobs.data_consumer()")
+	job2res = client.JobCreate(job2req)
 	print(f"{job2res=}")
 
-	job2stReq = protos.ClientCommandRequest(query_job_status_id=job2res.job_id)
+	job2stReq = protos.JobStatusRequest(job_id=job2res.job_id)
 	while True:
-		job2stRes = client.ClientCommand(job2stReq)
+		job2stRes = client.JobStatus(job2stReq)
 		print(f"{job2stRes=}")
 		if job2stRes.job_status == protos.JobStatus.WORKER_RUNNING:
 			time.sleep(0.2)
@@ -47,11 +47,11 @@ def main() -> None:
 		else:
 			raise ValueError(job2stRes)
 
-	finReq = protos.RetrieveDatasetRequest(dataset_id="d1", block_size_hint=1024)
-	finRes = client.RetrieveDataset(finReq)
+	finReq = protos.DatasetCommandRequest(dataset_id="d1", block_size_hint=1024, retrieve=True)
+	finRes = client.DatasetCommand(finReq)
 	finResBuf = b""
 	for finResIt in finRes:
-		if finResIt.status != protos.DatasetStatus.DATASET_AVAILABLE:
+		if finResIt.status != protos.DatasetCommandResult.DATASET_AVAILABLE:
 			print("error obtaining final result")
 		else:
 			finResBuf += finResIt.data
