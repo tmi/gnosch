@@ -56,7 +56,8 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 	def DatasetCommand(self, request: protos.DatasetCommandRequest, context: Any) -> Iterator[protos.DatasetCommandResponse]: # type: ignore
 		primary_id = self.dataset_manager.primary_of(request.dataset_id)
 		if not primary_id:
-			raise ValueError("no workers")
+			yield protos.DatasetCommandResponse(status=protos.DatasetCommandResult.DATASET_NOT_FOUND)
+			return
 		primary = self.workers[primary_id]
 		if request.drop:
 			workers = self.dataset_manager.replicas_with(request.dataset_id)
@@ -88,11 +89,12 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 		logger.debug(f"currently registered {len(self.workers)} workers")
 		return protos.RegisterWorkerResponse(worker_id=worker_id)
 
-	def RegisterDataset(self, request: protos.RegisterDatasetRequest, context: Any) -> protos.RegisterDatasetResponse: # type: ignore
+	def RegisterDataset(self, request: protos.DatasetCommandResponse, context: Any) -> protos.PingResponse: # type: ignore
 		logger.info(f"registering dataset {request}")
 		if request.status != protos.DatasetCommandResult.DATASET_AVAILABLE:
 			raise NotImplementedError(request.status)
 		self.dataset_manager.update(request)
+		return protos.PingResponse(status=protos.ServerStatus.OK)
 		
 
 	def quit(self):

@@ -32,7 +32,7 @@ class DatasetManager():
 	datasets: dict[DatasetId, Dataset]
 
 	def __init__(self):
-		datasets = {}
+		self.datasets = {}
 
 	def replicas_with(self, dataset_id: DatasetId) -> Iterable[WorkerId]:
 		ds = self.datasets.get(dataset_id, None)

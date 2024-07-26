@@ -36,6 +36,7 @@ def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manage
 		command, data = payload.decode("ascii").split(":", 1)
 		if command == "report_worker_id":
 			worker_id = data
+			local_server.sendto(b"Y", client)
 		elif command == "ping":
 			local_server.sendto(b"Y", client)
 		elif not worker_id:

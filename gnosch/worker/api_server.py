@@ -33,6 +33,8 @@ class WorkerImpl(services.GnoschBase):
 		status = send_command("report_worker_id", self.worker_id)
 		if status != "Y":
 			raise ValueError("failed to register worker id")
+		else:
+			logger.info("worker registration complete")
 
 	def Ping(self, request: protos.PingRequest, context: Any):  # type: ignore
 		return protos.PingResponse(status=protos.ServerStatus.OK)

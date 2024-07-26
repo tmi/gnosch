@@ -15,7 +15,7 @@ class ClientController():
 
 	def __init__(self):
 		self.channel = grpc.insecure_channel(self.controller_url)
-		client = services.GnoschControllerStub(self.channel)
+		self.client = services.GnoschControllerStub(self.channel)
 
 	def quit(self):
 		self.channel.close()

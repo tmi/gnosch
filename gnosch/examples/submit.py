@@ -14,11 +14,21 @@ import gnosch.api.gnosch_pb2 as protos
 
 def main() -> None:
 	print(f"main starting with pid {os.getpid()}")
+	channel = grpc.insecure_channel("localhost:50052")
+	client = services.GnoschBaseStub(channel)
+	ping = client.Ping(protos.PingRequest())
+	if ping.status != protos.ServerStatus.OK:
+		raise ValueError(f"worker not responding OK to ping: {ping}")
+	else:
+		print("worker healthy")
+
 	channel = grpc.insecure_channel("localhost:50051")
 	client = services.GnoschBaseStub(channel)
 	ping = client.Ping(protos.PingRequest())
 	if ping.status != protos.ServerStatus.OK:
 		raise ValueError(f"controller not responding OK to ping: {ping}")
+	else:
+		print("controller up and ready")
 
 	print("about to purge previous run dataset (if exists)")
 	purgeReq = protos.DatasetCommandRequest(dataset_id="d1", drop=True)
