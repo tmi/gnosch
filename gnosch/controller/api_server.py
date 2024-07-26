@@ -88,6 +88,13 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 		logger.debug(f"currently registered {len(self.workers)} workers")
 		return protos.RegisterWorkerResponse(worker_id=worker_id)
 
+	def RegisterDataset(self, request: protos.RegisterDatasetRequest, context: Any) -> protos.RegisterDatasetResponse: # type: ignore
+		logger.info(f"registering dataset {request}")
+		if request.status != protos.DatasetCommandResult.DATASET_AVAILABLE:
+			raise NotImplementedError(request.status)
+		self.dataset_manager.update(request)
+		
+
 	def quit(self):
 		for worker in self.workers.values():
 			worker.quit()

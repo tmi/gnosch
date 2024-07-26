@@ -10,6 +10,9 @@ from gnosch.controller.types import WorkerId, DatasetId
 from dataclasses import dataclass
 from enum import Enum
 from time import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DatasetStatus(Enum):
 	TRANSFERING = 0
@@ -50,9 +53,18 @@ class DatasetManager():
 
 	def update(self, response: protos.DatasetCommandResponse) -> None:
 		ds = self.datasets.get(response.dataset_id, None)
-		if not ds:
-			return
-		else:
+		if response.status == protos.DatasetCommandResult.DATASET_AVAILABLE:
+			if ds:
+				ds.replicas[response.worker_id] = DatasetStatus.AVAILABLE
+			else:
+				self.datasets[response.dataset_id] = Dataset(
+					primary_worker=response.worker_id,
+					primary_status=DatasetStatus.AVAILABLE,
+					replicas={},
+					last_update=time(),
+					size_bytes=-1,
+				)
+		elif ds:
 			ds.last_update = max(ds.last_update, time())
 			if response.status == protos.DatasetCommandResult.DATASET_DROPPED:
 				if response.worker_id != ds.primary_worker:
@@ -62,3 +74,5 @@ class DatasetManager():
 						self.datasets.pop(response.dataset_id)
 					else:
 						raise NotImplementedError("must first remove all replicas")
+		else:
+			logger.warning(f"received dataset update for a non-existent dataset: {response}")

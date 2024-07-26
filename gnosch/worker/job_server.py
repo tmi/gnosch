@@ -13,7 +13,6 @@ LocalServer and invoking the right methods from Dataset- and Job- Managers.
 
 # TODO try catches in the loop etc
 # TODO add active job monitoring
-# TODO add in grpc client to communicate with the controller
 # TODO add in grpc client to communicate to other workers
 # TODO make the command names systematic, get rid of repetitive code
 #      each command should be Callable[payload, bool|exception]
@@ -21,19 +20,26 @@ LocalServer and invoking the right methods from Dataset- and Job- Managers.
 
 from gnosch.worker.datasets import DatasetManager, DatasetStatus
 from gnosch.worker.jobs import JobManager
+from gnosch.worker.client_controller import ClientController
 from gnosch.worker.local_comm import LocalServer
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manager: JobManager):
+def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manager: JobManager, controller: ClientController):
+	worker_id = None
+
 	while True:
 		payload, client = local_server.receive()
 		logger.debug(payload)
 		command, data = payload.decode("ascii").split(":", 1)
-		if command == "ping":
+		if command == "report_worker_id":
+			worker_id = data
+		elif command == "ping":
 			local_server.sendto(b"Y", client)
+		elif not worker_id:
+			local_server.sendto(b"W", client)
 		elif command == "new":
 			if dataset_manager.new(data):
 				local_server.sendto(b"Y", client)
@@ -41,7 +47,10 @@ def start(local_server: LocalServer, dataset_manager: DatasetManager, job_manage
 				local_server.sendto(b"N", client)
 		elif command == "ready":
 			if dataset_manager.finalize(data):
-				local_server.sendto(b"Y", client)
+				if controller.register_dataset(data, worker_id):
+					local_server.sendto(b"Y", client)
+				else:
+					local_server.sendto(b"E", client)
 			else:
 				local_server.sendto(b"N", client)
 		elif command == "ready_ds":

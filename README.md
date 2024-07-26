@@ -25,8 +25,8 @@ Don't use it.
   - controller tracking dataset worker assignment
 	- [✓] dataset manager in controller
 	- [✓] controller update dataset manager in purge/retrieve calls (intercept result)
-	- [ ] 'dataset ready' status update in controller api + impl
-	- [ ] dataset status sending in worker
+	- [✓] 'dataset ready' status update in controller api + impl
+	- [✓] dataset status sending in worker
   - controller tracking job worker assignment
   - controller worker lookup
   - controller thread-safe? Probably locks in managers

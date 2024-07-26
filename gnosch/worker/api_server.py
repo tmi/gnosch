@@ -17,17 +17,22 @@ from gnosch.worker.local_comm import send_command
 from gnosch.worker.job_interface import get_dataset
 from typing import Any, Iterator
 from gnosch.common.bootstrap import new_process
+from gnosch.worker.client_controller import ClientController
 
 logger = logging.getLogger(__name__)
 
 class WorkerImpl(services.GnoschBase):
 	worker_id: str
 
-	def __init__(self, controller_url: str):
-		with grpc.insecure_channel(controller_url) as channel:
+	def __init__(self):
+		with ClientController.get_channel() as channel:
 			client = services.GnoschControllerStub(channel)
 			request = protos.RegisterWorkerRequest(url="localhost:50052") # TODO param
 			self.worker_id = client.RegisterWorker(request).worker_id
+		# TODO await ping for the job_server
+		status = send_command("report_worker_id", self.worker_id)
+		if status != "Y":
+			raise ValueError("failed to register worker id")
 
 	def Ping(self, request: protos.PingRequest, context: Any):  # type: ignore
 		return protos.PingResponse(status=protos.ServerStatus.OK)
@@ -77,10 +82,9 @@ class WorkerImpl(services.GnoschBase):
 def start() -> None:
 	new_process()
 	logger.info("starting worker grpc server")
-	controller_url = "localhost:50051" # TODO param
 
 	server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-	services.add_GnoschBaseServicer_to_server(WorkerImpl(controller_url), server)
+	services.add_GnoschBaseServicer_to_server(WorkerImpl(), server)
 	server.add_insecure_port("[::]:50052") # TODO param
 	server.start()
 	server.wait_for_termination()
