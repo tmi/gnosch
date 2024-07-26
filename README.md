@@ -24,11 +24,12 @@ Don't use it.
 - basic controller functionality
   - controller tracking dataset worker assignment
 	- [✓] dataset manager in controller
-	- [ ] controller update dataset manager in purge/retrieve calls (intercept result)
+	- [✓] controller update dataset manager in purge/retrieve calls (intercept result)
 	- [ ] 'dataset ready' status update in controller api + impl
 	- [ ] dataset status sending in worker
   - controller tracking job worker assignment
   - controller worker lookup
+  - controller thread-safe? Probably locks in managers
 - basic scheduler functionality
   - introduce dag abstraction and full fledged controller process
   - etc

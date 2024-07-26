@@ -54,19 +54,27 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 		raise ValueError("no workers")
 
 	def DatasetCommand(self, request: protos.DatasetCommandRequest, context: Any) -> Iterator[protos.DatasetCommandResponse]: # type: ignore
+		primary_id = self.dataset_manager.primary_of(request.dataset_id)
+		if not primary_id:
+			raise ValueError("no workers")
+		primary = self.workers[primary_id]
 		if request.drop:
-			workers = self.dataset_manager.workers_with(request.dataset_id)
+			workers = self.dataset_manager.replicas_with(request.dataset_id)
 			subreq = protos.DatasetCommandRequest(dataset_id=request.dataset_id, drop=True)
-			# NOTE [perf] run in async/pool
-			for worker in workers:
-				# TODO self update status?
-				yield from worker.client.DatasetCommand(subreq)
+			# NOTE [perf] run in async/pool. Also update status to purging
+			for worker_id in workers:
+				for response in self.workers[worker_id].client.DatasetCommand(subreq):
+					self.dataset_manager.update(response)
+					yield response
+			for response in primary.client.DatasetCommand(subreq):
+				self.dataset_manager.update(response)
+				yield response
 		if request.retrieve:
-			# TODO update timestamp
-			worker = self.dataset_manager.primary_of(request.dataset_id)
 			# NOTE [perf] consider asking multiple workers, each for a different block
 			# NOTE [perf] consider returning the assignment for client to fetch on their own instead
-			yield from worker.client.DatasetCommand(request)
+			for response in primary.client.DatasetCommand(request):
+				self.dataset_manager.update(response)
+				yield response
 
 	def RegisterWorker(self, request: protos.RegisterWorkerRequest, context: Any) -> protos.RegisterWorkerResponse: # type: ignore
 		logger.info(f"registering worker {request}")
