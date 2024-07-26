@@ -17,17 +17,24 @@ from gnosch.worker.local_comm import send_command
 from gnosch.worker.job_interface import get_dataset
 from typing import Any, Iterator
 from gnosch.common.bootstrap import new_process
+from gnosch.worker.client_controller import ClientController
 
 logger = logging.getLogger(__name__)
 
 class WorkerImpl(services.GnoschBase):
 	worker_id: str
 
-	def __init__(self, controller_url: str):
-		with grpc.insecure_channel(controller_url) as channel:
+	def __init__(self):
+		with ClientController.get_channel() as channel:
 			client = services.GnoschControllerStub(channel)
 			request = protos.RegisterWorkerRequest(url="localhost:50052") # TODO param
 			self.worker_id = client.RegisterWorker(request).worker_id
+		# TODO await ping for the job_server
+		status = send_command("report_worker_id", self.worker_id)
+		if status != "Y":
+			raise ValueError("failed to register worker id")
+		else:
+			logger.info("worker registration complete")
 
 	def Ping(self, request: protos.PingRequest, context: Any):  # type: ignore
 		return protos.PingResponse(status=protos.ServerStatus.OK)
@@ -57,16 +64,16 @@ class WorkerImpl(services.GnoschBase):
 		if request.retrieve:
 			data, h, available = get_dataset(request.dataset_id, 1_000)
 			if not available:
-				yield protos.DatasetCommandResponse(data=b"", status=protos.DatasetCommandResult.DATASET_NOT_FOUND)
+				yield protos.DatasetCommandResponse(data=b"", status=protos.DatasetCommandResult.DATASET_NOT_FOUND, worker_id=self.worker_id)
 			else:
 				logger.debug("about to stream dataset")
 				i, k, L = 0, request.block_size_hint, len(data)
 				while i < L:
-					yield protos.DatasetCommandResponse(data=bytes(data[i : i + k]), status=protos.DatasetCommandResult.DATASET_AVAILABLE)
+					yield protos.DatasetCommandResponse(data=bytes(data[i : i + k]), status=protos.DatasetCommandResult.DATASET_AVAILABLE, worker_id=self.worker_id)
 					i += k
 				h()
 		if request.drop:
-			response = protos.DatasetCommandResponse(data=bytes(), dataset_id=request.dataset_id)
+			response = protos.DatasetCommandResponse(data=bytes(), dataset_id=request.dataset_id, worker_id=self.worker_id)
 			status = send_command("drop_ds", request.dataset_id)
 			if status == "Y":
 				response.status=protos.DatasetCommandResult.DATASET_DROPPED
@@ -77,10 +84,9 @@ class WorkerImpl(services.GnoschBase):
 def start() -> None:
 	new_process()
 	logger.info("starting worker grpc server")
-	controller_url = "localhost:50051" # TODO param
 
 	server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-	services.add_GnoschBaseServicer_to_server(WorkerImpl(controller_url), server)
+	services.add_GnoschBaseServicer_to_server(WorkerImpl(), server)
 	server.add_insecure_port("[::]:50052") # TODO param
 	server.start()
 	server.wait_for_termination()

@@ -22,12 +22,15 @@ Don't use it.
   - add in config
   - add in docker
 - basic controller functionality
-  - controller tracking job/dataset worker assignment
+  - controller tracking job worker assignment
   - controller worker lookup
+  - controller thread-safe? Probably locks in managers
 - basic scheduler functionality
   - introduce dag abstraction and full fledged controller process
   - etc
 - reliability and recoverability
+  - worker heartbeat/ping, explicit removal, try out multiple workers joining in and out
+    - maybe support dataset resilience parameter
   - ...
 - performance improvements
   - rewrite internals to rust

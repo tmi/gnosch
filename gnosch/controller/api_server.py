@@ -14,6 +14,8 @@ from gnosch.common.bootstrap import new_process
 import gnosch.api.gnosch_pb2_grpc as services
 import gnosch.api.gnosch_pb2 as protos
 import grpc
+from gnosch.controller.types import WorkerId
+from gnosch.controller.datasets import DatasetManager
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +31,12 @@ class Worker:
 
 class ControllerImpl(services.GnoschBase, services.GnoschController):
 
-	workers: dict[str, Worker]
+	workers: dict[WorkerId, Worker]
+	dataset_manager: DatasetManager
 
-	def __init__(self):
+	def __init__(self, dataset_manager):
 		self.workers = {}
+		self.dataset_manager = dataset_manager
 
 	def Ping(self, request: protos.PingRequest, context: Any):  # type: ignore
 		return protos.PingResponse(status=protos.ServerStatus.OK)
@@ -50,11 +54,28 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 		raise ValueError("no workers")
 
 	def DatasetCommand(self, request: protos.DatasetCommandRequest, context: Any) -> Iterator[protos.DatasetCommandResponse]: # type: ignore
-		# TODO dataset lookup
-		for worker in self.workers.values():
-			yield from worker.client.DatasetCommand(request)
-		if not self.workers:
-			raise ValueError("no workers")
+		primary_id = self.dataset_manager.primary_of(request.dataset_id)
+		if not primary_id:
+			yield protos.DatasetCommandResponse(status=protos.DatasetCommandResult.DATASET_NOT_FOUND)
+			return
+		primary = self.workers[primary_id]
+		if request.drop:
+			workers = self.dataset_manager.replicas_with(request.dataset_id)
+			subreq = protos.DatasetCommandRequest(dataset_id=request.dataset_id, drop=True)
+			# NOTE [perf] run in async/pool. Also update status to purging
+			for worker_id in workers:
+				for response in self.workers[worker_id].client.DatasetCommand(subreq):
+					self.dataset_manager.update(response)
+					yield response
+			for response in primary.client.DatasetCommand(subreq):
+				self.dataset_manager.update(response)
+				yield response
+		if request.retrieve:
+			# NOTE [perf] consider asking multiple workers, each for a different block
+			# NOTE [perf] consider returning the assignment for client to fetch on their own instead
+			for response in primary.client.DatasetCommand(request):
+				self.dataset_manager.update(response)
+				yield response
 
 	def RegisterWorker(self, request: protos.RegisterWorkerRequest, context: Any) -> protos.RegisterWorkerResponse: # type: ignore
 		logger.info(f"registering worker {request}")
@@ -68,6 +89,14 @@ class ControllerImpl(services.GnoschBase, services.GnoschController):
 		logger.debug(f"currently registered {len(self.workers)} workers")
 		return protos.RegisterWorkerResponse(worker_id=worker_id)
 
+	def RegisterDataset(self, request: protos.DatasetCommandResponse, context: Any) -> protos.PingResponse: # type: ignore
+		logger.info(f"registering dataset {request}")
+		if request.status != protos.DatasetCommandResult.DATASET_AVAILABLE:
+			raise NotImplementedError(request.status)
+		self.dataset_manager.update(request)
+		return protos.PingResponse(status=protos.ServerStatus.OK)
+		
+
 	def quit(self):
 		for worker in self.workers.values():
 			worker.quit()
@@ -77,8 +106,10 @@ def start() -> None:
 	new_process()
 	logger.info("starting controller grpc server")
 
+	dataset_manager = DatasetManager()
+	controller = ControllerImpl(dataset_manager)
+
 	server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-	controller = ControllerImpl()
 	atexit.register(controller.quit)
 	services.add_GnoschControllerServicer_to_server(controller, server)
 	services.add_GnoschBaseServicer_to_server(controller, server)

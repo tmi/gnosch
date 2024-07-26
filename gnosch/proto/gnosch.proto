@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+// TODO bad naming, maybe just generic ping status? Or a boolean all_good?
 enum ServerStatus {
 	UNKNOWN_SERVER_STATUS = 0;
 	OK = 1;
@@ -50,10 +51,13 @@ enum DatasetCommandResult {
 	DATASET_DROPPED = 4;
 }
 
+// TODO bad naming -- it's used as a status report in a request fashion too
 message DatasetCommandResponse {
 	optional DatasetCommandResult status = 1;
 	optional string dataset_id = 2;
-	optional bytes data = 3;
+	optional string worker_id = 3;
+	optional bytes data = 4;
+	// TODO put length here as well? For the available command
 }
 
 service GnoschBase {
@@ -75,4 +79,5 @@ message RegisterWorkerResponse {
 
 service GnoschController {
 	rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse) {}
+	rpc RegisterDataset(DatasetCommandResponse) returns (PingResponse) {}
 }
