@@ -64,7 +64,8 @@ def simulate(cluster_spec: Cluster, task_graph: TaskGraph, schedule: Schedule) -
 		# launch new tasks
 		next_launch: set[str] = set()
 		for task in unscheduled:
-			if not (schedule[task].datasets_available - datasets) and not (schedule[task].tasks_completed - done):
+			# NOTE this is a rather unperformant part -- replace the set calls with some dynamically shrinked copy
+			if not (set(schedule[task].datasets_available) - datasets) and not (set(schedule[task].tasks_completed) - done):
 				logger.debug(f"launching task {task} at node {schedule[task].target_node}")
 				next_launch.add(task)
 				running[schedule[task].target_node].add(task)

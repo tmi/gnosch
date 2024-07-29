@@ -19,3 +19,7 @@ clean-pyc:
 
 val:
 	mypy gnosch --ignore-missing-imports
+	mypy test --ignore-missing-imports
+
+pytest:
+	PYTHONPATH="." pytest .
