@@ -21,7 +21,6 @@ Don't use it.
 
 ## TODOs
 - cicd, best practices, etc
-  - add in tests
   - add cicd gh actions
   - add in config
   - add in docker
@@ -32,11 +31,14 @@ Don't use it.
 - basic scheduler functionality
   - [✓] api and model
   - [✓] simulator naive impl
-  - [ ] simulator basic test
+  - [✓] simulator basic test
   - [ ] api naive impl
   - [ ] api basic test
-  - introduce dag abstraction and full fledged controller process
-  - etc
+- actual scheduling
+  - accept a task graph definition in controller
+  - invoke scheduler in controller
+  - act out schedule in controller
+  - react to schedule failures, dynamically reschedule
 - design improvements
   - job server -- replace the big loop with some better pattern, clean the api
   - grpc api -- clean the api, make the contract more intelligible
