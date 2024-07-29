@@ -30,6 +30,11 @@ Don't use it.
   - controller worker lookup
   - controller thread-safe? Probably locks in managers
 - basic scheduler functionality
+  - [✓] api and model
+  - [✓] simulator naive impl
+  - [ ] simulator basic test
+  - [ ] api naive impl
+  - [ ] api basic test
   - introduce dag abstraction and full fledged controller process
   - etc
 - design improvements
