@@ -21,8 +21,9 @@ Don't use it.
 
 ## TODOs
 - cicd, best practices, etc
+  - add py.typed and manifest and proper setup/pyproject, fix mypy in test
   - add cicd gh actions
-  - add in config
+  - add in config, fix logging in test
   - add in docker
 - basic controller functionality
   - controller tracking job worker assignment
@@ -34,10 +35,12 @@ Don't use it.
   - [✓] simulator basic test
   - [ ] api naive impl
   - [ ] api basic test
+  - [ ] fix internode coms in simulator
 - actual scheduling
   - accept a task graph definition in controller
   - invoke scheduler in controller
   - act out schedule in controller
+    - unify controller and simulator interfaces
   - react to schedule failures, dynamically reschedule
 - design improvements
   - job server -- replace the big loop with some better pattern, clean the api
